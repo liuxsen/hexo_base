@@ -1,0 +1,802 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+    
+    <entry>
+      <title><![CDATA[centos启用ftp功能]]></title>
+      <url>http://yoursite.com/2017/04/16/centos%E5%90%AF%E7%94%A8ftp%E5%8A%9F%E8%83%BD/</url>
+      <content type="html"><![CDATA[<h1 id="centos启用ftp功能"><a href="#centos启用ftp功能" class="headerlink" title="centos启用ftp功能"></a>centos启用ftp功能</h1><blockquote>
+<p>vsftpd作为FTP服务器，在Linux系统中是非常常用的。下面我们介绍如何在centos系统上安装vsftp。</p>
+</blockquote>
+<h2 id="什么是vsftpd"><a href="#什么是vsftpd" class="headerlink" title="什么是vsftpd"></a>什么是vsftpd</h2><blockquote>
+<p> ftpd是一款在Linux发行版中最受推崇的FTP服务器程序。特点是小巧轻快，安全易用。<br>vsftpd 的名字代表”very secure FTP daemon”, </p>
+</blockquote>
+<h2 id="1、安装vsftpd"><a href="#1、安装vsftpd" class="headerlink" title="1、安装vsftpd"></a>1、安装vsftpd</h2><p>###1、以管理员（root）身份执行以下命令</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yum install vsftpd</div></pre></td></tr></table></figure>
+<h3 id="2、设置开机启动vsftpd-ftp服务"><a href="#2、设置开机启动vsftpd-ftp服务" class="headerlink" title="2、设置开机启动vsftpd ftp服务"></a>2、设置开机启动vsftpd ftp服务</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">chkconfig vsftpd on</div></pre></td></tr></table></figure>
+<h3 id="3、启动vsftpd服务-默认ftp服务是没有启动的，用下面命令启动"><a href="#3、启动vsftpd服务-默认ftp服务是没有启动的，用下面命令启动" class="headerlink" title="3、启动vsftpd服务(默认ftp服务是没有启动的，用下面命令启动)"></a>3、启动vsftpd服务(默认ftp服务是没有启动的，用下面命令启动)</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">service vsftpd start</div></pre></td></tr></table></figure>
+<h3 id="管理vsftpd相关命令："><a href="#管理vsftpd相关命令：" class="headerlink" title="管理vsftpd相关命令："></a>管理vsftpd相关命令：</h3><p>停止vsftpd:  service vsftpd stop</p>
+<p>重启vsftpd:  service vsftpd restart</p>
+<p>安装完后，有/etc/vsftpd/vsftpd.conf 文件，用来配置，还有新建了一个ftp用户和ftp的组，指向home目录为/var/ftp,默认是nologin（不能登录系统）</p>
+<p>可以用下面命令查看用户</p>
+<p>cat /etc/passwd</p>
+<h3 id="2、安装ftp客户端组件（用来验证是否vsftpd）"><a href="#2、安装ftp客户端组件（用来验证是否vsftpd）" class="headerlink" title="2、安装ftp客户端组件（用来验证是否vsftpd）"></a>2、安装ftp客户端组件（用来验证是否vsftpd）</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yum -y install ftp</div></pre></td></tr></table></figure>
+<h3 id="执行命令尝试登录"><a href="#执行命令尝试登录" class="headerlink" title="执行命令尝试登录"></a>执行命令尝试登录</h3><p>ftp localhost</p>
+<blockquote>
+<p>输入用户名ftp，密码随便（因为默认是允许匿名的）<br>登录成功，就代表ftp服务可用了。<br>但是，外网是访问不了的，所以还要继续配置。</p>
+</blockquote>
+<h3 id="3、配置防火墙"><a href="#3、配置防火墙" class="headerlink" title="3、配置防火墙"></a>3、配置防火墙</h3><blockquote>
+<p>因为ftp默认的端口为21，而centos默认是没有开启的，所以要修改iptables文件</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vi /etc/sysconfig/iptables</div></pre></td></tr></table></figure>
+<p>在行上面有22 -j ACCEPT 下面另起一行输入跟那行差不多的，只是把22换成21，或者添加这行代码：-A RH-Firewall-1-INPUT -m state –state NEW -m tcp -p tcp –dport 21 -j ACCEPT，然后:wq保存。</p>
+<p>保存和关闭文件，重启防火墙：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">service iptables restart</div></pre></td></tr></table></figure>
+<blockquote>
+<p>外网是可以访问上去了，可是发现没法返回目录，也上传不了，因为selinux作怪了。</p>
+</blockquote>
+<h3 id="4、配置vsftpd服务器"><a href="#4、配置vsftpd服务器" class="headerlink" title="4、配置vsftpd服务器"></a>4、配置vsftpd服务器</h3><p>默认的配置文件是/etc/vsftpd/vsftpd.conf，你可以用文本编辑器打开。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vi /etc/vsftpd/vsftpd.conf</div></pre></td></tr></table></figure>
+<h3 id="添加ftp用户"><a href="#添加ftp用户" class="headerlink" title="添加ftp用户"></a>添加ftp用户</h3><p>下面是添加ftpuser用户，设置根目录为/home/wwwroot/ftpuser,禁止此用户登录SSH的权限，并限制其访问其它目录。</p>
+<blockquote>
+<p>１、修改/etc/vsftpd/vsftpd.conf</p>
+</blockquote>
+<p>把第一行的 anonymous_enable=YES ，改为NO，取消匿名登陆<br>将底下三行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">#chroot_list_enable=YES</div><div class="line"># (default follows)</div><div class="line">#chroot_list_file=/etc/vsftpd.chroot_list</div></pre></td></tr></table></figure>
+<p>改为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">chroot_list_enable=YES</div><div class="line"># (default follows)</div><div class="line">chroot_list_file=/etc/vsftpd/chroot_list</div></pre></td></tr></table></figure>
+<p>重启</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">service vsftpd restart</div></pre></td></tr></table></figure>
+<h3 id="5、新建一个用户-ftpuser为用户名，随便就可以"><a href="#5、新建一个用户-ftpuser为用户名，随便就可以" class="headerlink" title="5、新建一个用户(ftpuser为用户名，随便就可以)"></a>5、新建一个用户(ftpuser为用户名，随便就可以)</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">useradd ftpuser</div></pre></td></tr></table></figure>
+<p>修改密码（输入两次）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">passwd ftpuser</div></pre></td></tr></table></figure>
+<blockquote>
+<p>这样一个用户建完，可以用这个登录，记得用普通登录不要用匿名了。登录后默认的路径为 /home/ftpuser.</p>
+<p>这种方法不能设置自己的目录，推荐使用下面的方法设置用户和用户ftp目录。</p>
+</blockquote>
+<h3 id="6、增加用户ftpuser，指向目录-home-wwwroot-ftpuser-禁止登录SSH权限。"><a href="#6、增加用户ftpuser，指向目录-home-wwwroot-ftpuser-禁止登录SSH权限。" class="headerlink" title="6、增加用户ftpuser，指向目录/home/wwwroot/ftpuser,禁止登录SSH权限。"></a>6、增加用户ftpuser，指向目录/home/wwwroot/ftpuser,禁止登录SSH权限。</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">useradd -d /home/wwwroot/ftpuser -g ftp -s /sbin/nologin ftpuser</div></pre></td></tr></table></figure>
+<p>1、设置用户口令</p>
+<p>passwd ftpuser</p>
+<p>2、编辑文件chroot_list:</p>
+<p>vi /etc/vsftpd/chroot_list 内容为ftp用户名,每个用户占一行,如：</p>
+<p>peter<br>john<br>另外，如果觉得以后管理ftp用户名嫌麻烦，可以使用centos官方发布的脚本管理。地址如下：</p>
+<p><a href="http://wiki.centos.org/HowTos/Chroot_Vsftpd_with_non-system_users" target="_blank" rel="external">http://wiki.centos.org/HowTos/Chroot_Vsftpd_with_non-system_users</a></p>
+<h3 id="7、修改selinux（遇到的问题经常与之有关）"><a href="#7、修改selinux（遇到的问题经常与之有关）" class="headerlink" title="7、修改selinux（遇到的问题经常与之有关）"></a>7、修改selinux（遇到的问题经常与之有关）</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">getsebool -a | grep ftp</div></pre></td></tr></table></figure>
+<blockquote>
+<p>执行上面命令，再返回的结果看到两行都是off，代表，没有开启外网的访问。(这是因为服务器开启了selinux，这限制了FTP的登录。)</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">allow_ftpd_full_access off</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ftp_home_dir off</div></pre></td></tr></table></figure>
+<blockquote>
+<p>只要把上面都变成on就行</p>
+</blockquote>
+<p>执行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">setsebool -P allow_ftpd_full_access 1   </div><div class="line"></div><div class="line">setsebool -P ftp_home_dir off 1</div></pre></td></tr></table></figure>
+<blockquote>
+<p>再重启一下vsftpd</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">service vsftpd restart</div></pre></td></tr></table></figure>
+<p>这样应该没问题了（如果，还是不行，看看是不是用了ftp客户端工具用了passive模式访问了，如提示Entering Passive mode，就代表是passive模式，默认是不行的，因为ftp passive模式被iptables挡住了，下面会讲怎么开启，如果懒得开的话，就看看你客户端ftp是否有port模式的选项，或者把passive模式的选项去掉。如果客户端还是不行，看看客户端上的主机的电脑是否开了防火墙，关吧）</p>
+<p>8、开启passive模式</p>
+<p>默认是开启的，但是要指定一个端口范围，打开vsftpd.conf文件，在后面加上</p>
+<p>pasv_min_port=30000<br>pasv_max_port=30999<br>表示端口范围为30000~30999，这个可以随意改。</p>
+<p>改完重启一下vsftpd</p>
+<p>由于指定这段端口范围，iptables也要相应的开启这个范围，所以像上面那样打开iptables文件</p>
+<p>也是在21上下面另起一行，更那行差不多，只是把21 改为30000:30999,然后:wq保存，重启下iptables。这样就搞定了。</p>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[nvm安装nodejs]]></title>
+      <url>http://yoursite.com/2017/04/16/nvm%E5%AE%89%E8%A3%85nodejs/</url>
+      <content type="html"><![CDATA[<h2 id="通过NVM安装"><a href="#通过NVM安装" class="headerlink" title="通过NVM安装"></a>通过NVM安装</h2><blockquote>
+<p>NVM（Node version manager）顾名思义，就是Node.js的版本管理软件，可以轻松的在Node.js各个版本间切换，项目源码GitHub</p>
+</blockquote>
+<h3 id="1-下载并安装NVM脚本"><a href="#1-下载并安装NVM脚本" class="headerlink" title="1.下载并安装NVM脚本"></a>1.下载并安装NVM脚本</h3><blockquote>
+<p>curl <a href="https://raw.githubusercontent.com/creationix/nvm/v0.13.1/install.sh" target="_blank" rel="external">https://raw.githubusercontent.com/creationix/nvm/v0.13.1/install.sh</a> | bash<br>source ~/.bash_profile</p>
+</blockquote>
+<h3 id="2-列出所需要的版本"><a href="#2-列出所需要的版本" class="headerlink" title="2.列出所需要的版本"></a>2.列出所需要的版本</h3><p>nvm list-remote</p>
+<p>返回结果如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">v0.10.29</div><div class="line">v0.10.30</div><div class="line"> v0.11.0</div><div class="line"> v0.11.1</div><div class="line"> v0.11.2</div><div class="line"> v0.11.3</div><div class="line"> v0.11.4</div><div class="line"> v0.11.5</div><div class="line"> v0.11.6</div><div class="line"> v0.11.7</div><div class="line"> v0.11.8</div><div class="line"> v0.11.9</div><div class="line">v0.11.10</div><div class="line">v0.11.11</div><div class="line">v0.11.12</div><div class="line">v0.11.13</div></pre></td></tr></table></figure>
+<h3 id="3-安装相应的版本"><a href="#3-安装相应的版本" class="headerlink" title="3.安装相应的版本"></a>3.安装相应的版本</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">nvm install v0.10.30</div></pre></td></tr></table></figure>
+<h3 id="4-查看已安装的版本"><a href="#4-查看已安装的版本" class="headerlink" title="4.查看已安装的版本"></a>4.查看已安装的版本</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">nvm list</div><div class="line">-&gt;  v0.10.30</div><div class="line">      system</div></pre></td></tr></table></figure>
+<h3 id="5-切换版本"><a href="#5-切换版本" class="headerlink" title="5.切换版本"></a>5.切换版本</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">nvm use v0.10.30</div></pre></td></tr></table></figure>
+<h3 id="6-设置默认版本"><a href="#6-设置默认版本" class="headerlink" title="6.设置默认版本"></a>6.设置默认版本</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">nvm <span class="built_in">alias</span> default v0.10.30</div></pre></td></tr></table></figure>]]></content>
+      
+        
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[linux-centos6.5-ssh]]></title>
+      <url>http://yoursite.com/2017/04/16/linux-centos6-5-ssh/</url>
+      <content type="html"><![CDATA[<h2 id="linux-centos6-5之ssh配置"><a href="#linux-centos6-5之ssh配置" class="headerlink" title="linux-centos6.5之ssh配置"></a>linux-centos6.5之ssh配置</h2><p>查询\安装SSH服务</p>
+<p>#rpm -qa |grep ssh 检查是否装了SSH包</p>
+<p>#yum install openssh-server 没有的话，安装SSH服务</p>
+<p>#chkconfig –list sshd 检查SSHD是否在本运行级别下设置为开机启动</p>
+<p>#chkconfig –level 2345 sshd on  如果没设置启动就设置下</p>
+<p>#service sshd restart  重新启动SSHD</p>
+<p>#netstat -antp |grep sshd  看看是否启动了22端口，需要确认下</p>
+<p>#iptables -nL  看看是否放行了22口</p>
+<p>#iptables -I INPUT -p tcp –dport 22 -j ACCEPT 没有的话放行22端口</p>
+<p>#iptables save 保存防火墙规则</p>
+<h1 id="vi-etc-ssh-sshd-config"><a href="#vi-etc-ssh-sshd-config" class="headerlink" title="vi /etc/ssh/sshd_config　"></a>vi /etc/ssh/sshd_config　</h1><p>用vi打开SSH的配置文件，在这里我们先保持默认（允许普通用户通过口令登录）</p>
+<p>#useradd lhc    添加普通用户（lhc）</p>
+<p>#passwd lhc     修改lhc密码</p>
+<p>下载安装超级终端</p>
+<p>链接：<a href="http://pan.baidu.com/s/1c2mbJBq" target="_blank" rel="external">http://pan.baidu.com/s/1c2mbJBq</a> 密码：awlc</p>
+<p>安装成功后，启动应用——&gt;新建连接</p>
+<p>输入无误的话，应该就可以成功登陆了。</p>
+<p>通过sftp上传下载</p>
+<h1 id="下载包路径"><a href="#下载包路径" class="headerlink" title="下载包路径"></a>下载包路径</h1><p>/usr/local/src</p>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[linux]]></title>
+      <url>http://yoursite.com/2017/03/19/linux/</url>
+      <content type="html"><![CDATA[<h1 id="linux-安装软件后给系统添加一个PATH-环境变量"><a href="#linux-安装软件后给系统添加一个PATH-环境变量" class="headerlink" title="linux 安装软件后给系统添加一个PATH 环境变量"></a>linux 安装软件后给系统添加一个PATH 环境变量</h1><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vi ~/.bashrc</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">MONGODB_HOME = /home/admin/Downloads/mongodb</div><div class="line">PATH = <span class="variable">$PATH</span>:<span class="variable">$MONGODB_HOME</span>/bin</div></pre></td></tr></table></figure>
+<blockquote>
+<p>是配置生效</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">source</span> ~/.bashrc</div></pre></td></tr></table></figure>
+<ol>
+<li>启动数据库</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">mongod --dbpath $dbpath</div><div class="line">--logpath $logpath</div><div class="line">--logappend</div><div class="line">--fork</div></pre></td></tr></table></figure>
+<p><strong>脚本启动或者配置文件启动</strong></p>
+<blockquote>
+<p>在mongodb解压后的文件中通过mkdir命令新建 data log 文件夹跟bin目录同级</p>
+</blockquote>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[css3 @media_Rule]]></title>
+      <url>http://yoursite.com/2017/03/05/css3-media-Rule/</url>
+      <content type="html"><![CDATA[<h1 id="media"><a href="#media" class="headerlink" title="@media"></a>@media</h1><figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">@<span class="keyword">media</span> </div><div class="line">(-webkit-min-device-pixel-ratio: <span class="number">2</span>), </div><div class="line">(-webkit-min-device-pixel-ratio: <span class="number">3</span>)&#123;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<blockquote>
+<p>面向未来<strong>高度兼容</strong>的写法；</p>
+</blockquote>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">@<span class="keyword">media</span></div><div class="line">only screen and (-webkit-min-device-pixel-ratio: <span class="number">2</span>),</div><div class="line">only screen and (   min--moz-device-pixel-ratio: <span class="number">2</span>),</div><div class="line">only screen and (     -o-min-device-pixel-ratio: <span class="number">2</span>/<span class="number">1</span>),</div><div class="line">only screen and (        min-device-pixel-ratio: <span class="number">2</span>),</div><div class="line">only screen and (                min-resolution: <span class="number">192dpi</span>),</div><div class="line">only screen and (                min-resolution: <span class="number">2dppx</span>) &#123; </div><div class="line">  </div><div class="line">  <span class="comment">/* Retina-specific stuff here */</span></div><div class="line">  <span class="comment">/*视网膜规则，或者说是高质量图片规则，放在这里*/</span></div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="sass-mixin"><a href="#sass-mixin" class="headerlink" title="sass mixin"></a>sass mixin</h3><blockquote>
+<p>通过判断清晰度（highish-res） 来动态添加高质量的图片；</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">bg-image($url)&#123;</div><div class="line">    background-image:url($url+"@2x.png");</div><div class="line">    @media</div><div class="line">        only screen and (-webkit-min-device-pixel-ratio: 3),</div><div class="line">        only screen and (   min--moz-device-pixel-ratio: 3),</div><div class="line">        only screen and (     -o-min-device-pixel-ratio: 3/1),</div><div class="line">        only screen and (        min-device-pixel-ratio: 3),</div><div class="line">        only screen and (                min-resolution: 300dpi),</div><div class="line">        only screen and (                min-resolution: 3dppx) &#123; </div><div class="line">          background-image: url($url+"@3x.png");</div><div class="line">            /* Retina-specific stuff here */</div><div class="line">            /*视网膜规则，或者说是高质量图片规则，放在这里*/</div><div class="line">        &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>]]></content>
+      
+        
+        <tags>
+            
+            <tag> css技巧 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[vue-router基础+实践]]></title>
+      <url>http://yoursite.com/2017/03/03/vue-router%E5%9F%BA%E7%A1%80-%E5%AE%9E%E8%B7%B5/</url>
+      <content type="html"><![CDATA[<blockquote>
+<p>可以使用npm直接安装插件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">npm install vue-router --save</div></pre></td></tr></table></figure></p>
+</blockquote>
+<p>执行命令完成vue-router的安装，并在package.json中添加了vue-router的依赖。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&quot;dependencies&quot;: &#123;</div><div class="line">   ...</div><div class="line">   &quot;vue-router&quot;: &quot;^2.1.0&quot;</div><div class="line">   ...</div><div class="line"> &#125;</div></pre></td></tr></table></figure>
+<blockquote>
+<p>如果是要安装在开发环境下，则使用以下命令行：</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">npm install vue-router --save-dev</div><div class="line"></div><div class="line">&quot;devDependencies&quot;: &#123;</div><div class="line">  ...</div><div class="line">  &quot;vue-router&quot;: &quot;^2.1.0&quot;,</div><div class="line">  ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">直接下载/CDN</div><div class="line">https://unpkg.com/vue-router/dist/vue-router.js</div><div class="line"> &lt;script src=&quot;/path/to/vue.js&quot;&gt;&lt;/script&gt;</div><div class="line"> &lt;script src=&quot;/path/to/vue-router.js&quot;&gt;&lt;/script&gt;</div></pre></td></tr></table></figure>
+<h2 id="路由实现"><a href="#路由实现" class="headerlink" title="路由实现"></a>路由实现</h2><p><strong>一个最简单的单页面应用</strong><br><figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//app.js</span></div><div class="line"><span class="keyword">import</span> Vue <span class="keyword">from</span> <span class="string">'vue'</span></div><div class="line"><span class="keyword">import</span> App <span class="keyword">from</span> <span class="string">'./App'</span></div><div class="line"><span class="keyword">import</span> VueRouter <span class="keyword">from</span> <span class="string">'vue-router'</span></div><div class="line"><span class="keyword">import</span> Page01 <span class="keyword">from</span> <span class="string">'./components/page01'</span></div><div class="line"><span class="keyword">import</span> Page02 <span class="keyword">from</span> <span class="string">'./components/page02'</span></div><div class="line"></div><div class="line">Vue.use(VueRouter) <span class="comment">// 全局安装路由功能</span></div><div class="line"></div><div class="line"><span class="comment">// 定义路径</span></div><div class="line"><span class="keyword">const</span> routes = [</div><div class="line">  &#123; <span class="attr">path</span>: <span class="string">'/'</span>, <span class="attr">component</span>: Page01 &#125;,</div><div class="line">  &#123; <span class="attr">path</span>: <span class="string">'/02'</span>, <span class="attr">component</span>: Page02 &#125;,</div><div class="line">]</div><div class="line"><span class="comment">// 创建路由对象</span></div><div class="line"><span class="keyword">const</span> router = <span class="keyword">new</span> VueRouter(&#123;</div><div class="line">  routes</div><div class="line">&#125;)</div><div class="line"><span class="keyword">new</span> Vue(&#123;</div><div class="line">  <span class="attr">el</span>: <span class="string">'#app'</span>,</div><div class="line">  <span class="attr">template</span>: <span class="string">'&lt;App/&gt;'</span>,</div><div class="line">  <span class="attr">components</span>: &#123; App &#125;,</div><div class="line">  router</div><div class="line">&#125;)</div><div class="line">App.vue</div><div class="line">&lt;template&gt;</div><div class="line">  &lt;div id="app"&gt;</div><div class="line">    &lt;router-link to="/"&gt;01&lt;/router-link&gt;</div><div class="line">    &lt;router-link to="/02"&gt;02&lt;/router-link&gt;</div><div class="line">    &lt;br/&gt;</div><div class="line">    &lt;router-view&gt;&lt;/router-view&gt;</div><div class="line">  &lt;/div&gt;</div><div class="line">&lt;/template&gt;</div><div class="line">page01.vue</div><div class="line">&lt;template&gt;</div><div class="line">  &lt;div&gt;</div><div class="line">    &lt;h1&gt;page01&lt;/h1&gt;</div><div class="line">  &lt;/div&gt;</div><div class="line">&lt;/template&gt;</div><div class="line">page02.vue</div><div class="line">&lt;template&gt;</div><div class="line">  &lt;div&gt;</div><div class="line">    &lt;h1&gt;page02&lt;/h1&gt;</div><div class="line">  &lt;/div&gt;</div><div class="line">&lt;/template&gt;</div></pre></td></tr></table></figure></p>
+<ol>
+<li>npm安装vue-router</li>
+<li>Vue.use(VueRouter)全局安装路由功能</li>
+<li>定义路径数组routes并创建路由对象router</li>
+<li>将路由注入到Vue对象中</li>
+<li>在根组件中使用<router-link>定义跳转路径</router-link></li>
+<li>在根组件中使用<router-view>来渲染组件</router-view></li>
+<li>创建子组件</li>
+</ol>
+<p><strong>路由的跳转</strong></p>
+<h4 id="router-link"><a href="#router-link" class="headerlink" title="router-link"></a>router-link</h4><p>router-link标签用于页面的跳转</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">router-link</span> <span class="attr">to</span>=<span class="string">"/page01"</span>&gt;</span>page01<span class="tag">&lt;/<span class="name">router-link</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>点击router-link标签router-view就会渲染路径为/page01的页面。</p>
+<p><strong>router.push</strong></p>
+<p><strong>通过JS代码控制路由的界面渲染</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div></pre></td><td class="code"><pre><div class="line">// 字符串 字符串为路径</div><div class="line">router.push(&apos;home&apos;)</div><div class="line">// 对象 </div><div class="line">router.push(&#123; path: &apos;home&apos; &#125;)</div><div class="line">// 命名的路由</div><div class="line">router.push(&#123; name: &apos;user&apos;, params: &#123; userId: 123 &#125;&#125;)</div><div class="line">// 带查询参数，变成 /register?plan=private</div><div class="line">router.push(&#123; path: &apos;register&apos;, query: &#123; plan: &apos;private&apos; &#125;&#125;)</div><div class="line">实例中的语法：</div><div class="line">// 字符串</div><div class="line">this.$router.push(&apos;home&apos;)</div><div class="line">// 对象</div><div class="line">this.$router.push(&#123; path: &apos;home&apos; &#125;)</div><div class="line">// 命名的路由</div><div class="line">this.$router.push(&#123; name: &apos;user&apos;, params: &#123; userId: 123 &#125;&#125;)</div><div class="line">// 带查询参数，变成 /register?plan=private</div><div class="line">this.$router.push(&#123; path: &apos;register&apos;, query: &#123; plan: &apos;private&apos; &#125;&#125;)</div><div class="line"></div><div class="line">//router.replace</div><div class="line">//push方法会向 history 栈添加一个新的记录，而replace方法是替换当前的页面，不会向 history 栈添加一个新的记录。</div><div class="line">&lt;router-link to=&quot;/05&quot; replace&gt;05&lt;/router-link&gt;</div><div class="line">this.$router.replace(&#123; path: &apos;/05&apos; &#125;)</div><div class="line"></div><div class="line">//router.go</div><div class="line">//控制history记录的前进和后退</div><div class="line">// 在浏览器记录中前进一步，等同于 history.forward()</div><div class="line">this.$router.go(1)</div><div class="line">// 后退一步记录，等同于 history.back()</div><div class="line">this.$router.go(-1)</div><div class="line">// 前进3步记录router.go(3)</div><div class="line">this.$router.go(3)</div><div class="line">//传参方式</div><div class="line">//由跳转的过程中会传递一个object，我们可以通过watch方法查看路由信息对象。</div><div class="line">watch: &#123;</div><div class="line">  &apos;$route&apos; (to, from) &#123;</div><div class="line">      console.log(to);</div><div class="line">      console.log(from);</div><div class="line">  &#125;,</div><div class="line">&#125;</div><div class="line">控制台看到的路由信息对象</div><div class="line">&#123;</div><div class="line">  ...</div><div class="line">  params: &#123; id: &apos;123&apos; &#125;,</div><div class="line">  query: &#123; name: &apos;jack&apos; &#125;,</div><div class="line">  ...</div><div class="line">&#125;</div><div class="line">params</div><div class="line">路由配置文件中定义参数</div><div class="line">&#123;</div><div class="line">  // 订单详情</div><div class="line">  path: &apos;/order/detail/:orderId&apos;,</div><div class="line">  name: &apos;orderDetail&apos;,</div><div class="line">  component: OrderDetailView</div><div class="line">&#125;</div><div class="line">路径后面的/:orderId就是我们要传递的参数</div><div class="line">this.$router.push(&#123; path: &apos;/order/detail/441&apos;&#125;);</div><div class="line">此时路由跳转的地址</div><div class="line">//http://localhost:3000/#/order/detail/441</div><div class="line">组件中获取数据</div><div class="line">&lt;h2&gt;&#123;&#123; $route.params.orderId &#125;&#125;&lt;/h2&gt;</div><div class="line">console.log(this.$route.params.orderId)</div><div class="line">//query</div><div class="line">//query传递数据的方式就是URL常见的查询参数</div><div class="line"></div><div class="line">&lt;router-link :to=&quot;&#123; path: &apos;/order/detail&apos;, query: &#123; id: item.id, stateId: item.stateId &#125;&#125;&quot;&gt;</div><div class="line"></div><div class="line">this.$router.push(&#123;path: &apos;/order/detail&apos;, query: &#123;id: orderIdCache&#125;&#125;);</div><div class="line">///获取数据和params是一样</div><div class="line">&lt;h2&gt;&#123;&#123; $route.query.orderId &#125;&#125;&lt;/h2&gt;</div><div class="line">console.log(this.$route.query.orderId)</div></pre></td></tr></table></figure>]]></content>
+      
+        
+        <tags>
+            
+            <tag> vue </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[hexo]]></title>
+      <url>http://yoursite.com/2017/03/02/hexo/</url>
+      <content type="html"><![CDATA[<blockquote>
+<p>hexo next 主题中的404问题</p>
+</blockquote>
+<p><strong>tags</strong></p>
+<img src="/2017/03/02/hexo/tags.png" alt="tags.png" title="">
+<p><strong>about</strong></p>
+<img src="/2017/03/02/hexo/about.png" alt="about.png" title="">
+<p>新建一个 <code>about</code> 页面：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hexo new page &quot;about&quot;</div></pre></td></tr></table></figure>
+<p>菜单显示 <code>about</code> 链接，在主题的 <code>_configy.yml</code> 设置中将 <code>menu</code> 中 <code>about</code> 前面的注释去掉即可。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">menu:</div><div class="line">  home: /</div><div class="line">  archives: /archives</div><div class="line">  tags: /tags</div><div class="line">  about: /about</div></pre></td></tr></table></figure>
+<p>添加一个 分类 页面，并在菜单中显示页面链接。</p>
+<ol>
+<li><p>新建一个页面，命名为 <code>categories</code> 。命令如下：</p>
+<pre><code>hexo new page categories
+</code></pre></li>
+<li><p>编辑刚新建的页面，将页面的类型设置为 <code>categories</code> ，主题将自动为这个页面显示所有分类。</p>
+<pre><code>title: 分类
+date: 2014-12-22 12:39:04
+type: &quot;categories&quot;
+---
+</code></pre><p> 注意：如果有启用多说 或者 Disqus 评论，默认页面也会带有评论。需要关闭的话，请添加字段 <code>comments</code> 并将值设置为 <code>false</code>，如：</p>
+<pre><code>title: 分类
+date: 2014-12-22 12:39:04
+type: &quot;categories&quot;
+comments: false
+---
+</code></pre></li>
+<li><p>在菜单中添加链接。编辑主题的 <code>_config.yml</code> ，将 <code>menu</code> 中的 <code>categories: /categories</code> 注释去掉，如下:</p>
+<pre><code>menu:
+  home: /
+  categories: /categories
+  archives: /archives
+  tags: /tags
+</code></pre></li>
+</ol>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> hexo </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Array.prototype]]></title>
+      <url>http://yoursite.com/2017/03/02/Array-prototype/</url>
+      <content type="html"><![CDATA[<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">Array</span>.prototype.indexOf</div><div class="line"><span class="built_in">Array</span>.prototype.lastIndexOf</div><div class="line"><span class="built_in">Array</span>.prototype.every</div><div class="line"><span class="built_in">Array</span>.prototype.some</div><div class="line"><span class="built_in">Array</span>.prototype.forEach</div><div class="line"><span class="built_in">Array</span>.prototype.map</div><div class="line"><span class="built_in">Array</span>.prototype.filter</div><div class="line"><span class="built_in">Array</span>.prototype.reduce</div><div class="line"><span class="built_in">Array</span>.prototype.reduceRight</div></pre></td></tr></table></figure>
+<p>1、indexOf</p>
+<blockquote>
+<p>indexOf()方法返回在该数组中第一个找到的元素位置，如果它不存在则返回-1。</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> arr = [<span class="string">'apple'</span>,<span class="string">'orange'</span>,<span class="string">'pear'</span>];  </div><div class="line"><span class="built_in">console</span>.log(<span class="string">"found:"</span>, arr.indexOf(<span class="string">"orange"</span>) != <span class="number">-1</span>); <span class="comment">// "found" true</span></div></pre></td></tr></table></figure>
+<p>2、lastindexOf</p>
+<blockquote>
+<p>lastIndexOf() 方法返回在该数组中最后一个找到的元素位置，和 indexof相反。</p>
+</blockquote>
+<p>3、every()</p>
+<blockquote>
+<p>evety()可是检测数组中的每一项是否符合条件</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> ary = [<span class="number">12</span>,<span class="number">23</span>,<span class="number">-24</span>,<span class="number">42</span>,<span class="number">1</span>];</div><div class="line"><span class="keyword">var</span> result = ary.every(<span class="function"><span class="keyword">function</span>(<span class="params">item, index</span>)</span>&#123;</div><div class="line">  <span class="keyword">return</span> item &gt; <span class="number">0</span></div><div class="line">&#125;)</div><div class="line"><span class="built_in">console</span>.log(result) <span class="comment">// false;</span></div></pre></td></tr></table></figure>
+<p>4、some()</p>
+<blockquote>
+<p>some()可以检测数组中是否有某一项符合条件</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> ary = [<span class="number">12</span>,<span class="number">23</span>,<span class="number">-24</span>,<span class="number">42</span>,<span class="number">1</span>];</div><div class="line"><span class="keyword">var</span> result = ary.some(<span class="function"><span class="keyword">function</span>(<span class="params">item, index</span>)</span>&#123;</div><div class="line">  <span class="keyword">return</span> item &lt; <span class="number">0</span></div><div class="line">&#125;)</div><div class="line"><span class="built_in">console</span>.log(result); <span class="comment">// true</span></div></pre></td></tr></table></figure>
+<p>5、 forEach() </p>
+<blockquote>
+<p>forEach为每个元素执行对应的方法</p>
+</blockquote>
+<p><strong>forEach是用来替换for循环的</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> arr = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>];</div><div class="line"></div><div class="line">arr.forEach(<span class="function"><span class="keyword">function</span>(<span class="params">item,index</span>)</span>&#123;</div><div class="line">  <span class="built_in">console</span>.log(item);</div><div class="line">&#125;);</div><div class="line"><span class="comment">// 1,2,3,4,5,6,7,8</span></div></pre></td></tr></table></figure>
+<p>6、 map()</p>
+<blockquote>
+<p>map()对数组的每个元素进行一定操作（映射）后，会返回一个新的数组， </p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> oldArr = [&#123;<span class="attr">first_name</span>:<span class="string">"Colin"</span>,<span class="attr">last_name</span>:<span class="string">"Toh"</span>&#125;,&#123;<span class="attr">first_name</span>:<span class="string">"Addy"</span>,<span class="attr">last_name</span>:<span class="string">"Osmani"</span>&#125;,&#123;<span class="attr">first_name</span>:<span class="string">"Yehuda"</span>,<span class="attr">last_name</span>:<span class="string">"Katz"</span>&#125;];</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">getNewArr</span>(<span class="params"></span>)</span>&#123;</div><div class="line">  <span class="keyword">return</span> oldArr.map(<span class="function"><span class="keyword">function</span>(<span class="params">item,index</span>)</span>&#123;</div><div class="line">    item.full_name = [item.first_name,item.last_name].join(<span class="string">" "</span>);</div><div class="line">    <span class="keyword">return</span> item;</div><div class="line">  &#125;);</div><div class="line"></div><div class="line">&#125;</div><div class="line"><span class="built_in">console</span>.log(getNewArr());</div><div class="line"><span class="comment">// [&#123;first_name:"Colin",last_name:"Toh",full_name:Colinlast_name&#125;]</span></div><div class="line"><span class="comment">//  map()是处理服务器返回数据时是一个非常实用的函数。</span></div></pre></td></tr></table></figure>
+<h3 id="forEach-与map的区别："><a href="#forEach-与map的区别：" class="headerlink" title="forEach 与map的区别："></a>forEach 与map的区别：</h3><blockquote>
+<p>forEach：用来遍历数组中的每一项；这个方法执行是没有返回值的，对原来数组也没有影响；数组中有几项，那么传递进去的匿名回调函数就需要执行几次；每一次执行匿名函数的时候，还给其传递了三个参数值：数组中的当前项item,当前项的索引index,原始数组list；理论上这个方法是没有返回值的，仅仅是遍历数组中的每一项，不对原来数组进行修改；但是我们可以自己通过数组的索引来修改原来的数组；</p>
+</blockquote>
+<p><strong>forEach方法中的this是ary,匿名回调函数中的this默认是window；</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> ary = [<span class="number">12</span>,<span class="number">23</span>,<span class="number">24</span>,<span class="number">42</span>,<span class="number">1</span>];</div><div class="line"><span class="keyword">var</span> res = ary.forEach(<span class="function"><span class="keyword">function</span> (<span class="params">item,index,input</span>) </span>&#123;</div><div class="line">  input[index] = item*<span class="number">10</span>;</div><div class="line">&#125;)</div><div class="line"><span class="built_in">console</span>.log(res);<span class="comment">//--&gt;undefined;</span></div><div class="line"><span class="built_in">console</span>.log(ary);<span class="comment">//--&gt;会对原来的数组产生改变；// [120,230,240,420,10];</span></div></pre></td></tr></table></figure>
+<blockquote>
+<p>区别：map的回调函数中支持return返回值；return的是啥，相当于把数组中的这一项变为啥（并不影响原来的数组，只是相当于把原数组克隆一份，把克隆的这一份的数组中的对应项改变了）；</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> ary = [<span class="number">12</span>,<span class="number">23</span>,<span class="number">24</span>,<span class="number">42</span>,<span class="number">1</span>];</div><div class="line"><span class="keyword">var</span> res = ary.map(<span class="function"><span class="keyword">function</span> (<span class="params">item,index,input</span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> item*<span class="number">10</span>;</div><div class="line">&#125;)</div><div class="line"><span class="built_in">console</span>.log(res);<span class="comment">//--&gt;[120,230,240,420,10];</span></div><div class="line"><span class="built_in">console</span>.log(ary);<span class="comment">//--&gt;[12,23,24,42,1]；</span></div></pre></td></tr></table></figure>
+<p>7、 filter</p>
+<blockquote>
+<p>该filter()方法创建一个新的匹配过滤条件的数组。</p>
+</blockquote>
+<p><strong>使用 filter()：</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> arr = [</div><div class="line">  &#123;<span class="string">"name"</span>:<span class="string">"apple"</span>, <span class="string">"count"</span>: <span class="number">2</span>&#125;,</div><div class="line">  &#123;<span class="string">"name"</span>:<span class="string">"orange"</span>, <span class="string">"count"</span>: <span class="number">5</span>&#125;,</div><div class="line">  &#123;<span class="string">"name"</span>:<span class="string">"pear"</span>, <span class="string">"count"</span>: <span class="number">3</span>&#125;,</div><div class="line">  &#123;<span class="string">"name"</span>:<span class="string">"orange"</span>, <span class="string">"count"</span>: <span class="number">16</span>&#125;,</div><div class="line">];</div><div class="line"><span class="keyword">var</span> newArr = arr.filter(<span class="function"><span class="keyword">function</span>(<span class="params">item</span>)</span>&#123;</div><div class="line">  <span class="keyword">return</span> item.name === <span class="string">"orange"</span>;</div><div class="line">&#125;);</div><div class="line"><span class="built_in">console</span>.log(<span class="string">"Filter results:"</span>,newArr);</div><div class="line"><span class="comment">// [&#123;"name":"orange", "count": 5&#125;,&#123;"name":"orange", "count": 16&#125;]</span></div></pre></td></tr></table></figure>
+<p>8、 reduce()</p>
+<blockquote>
+<p>reduce()可以实现一个累加器的功能</p>
+</blockquote>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> js基础 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[vue上传组件]]></title>
+      <url>http://yoursite.com/2017/03/02/vue%E4%B8%8A%E4%BC%A0%E7%BB%84%E4%BB%B6/</url>
+      <content type="html"><![CDATA[<img src="/2017/03/02/vue上传组件/上传.gif" alt="上传.gif" title="">
+<h3 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h3><figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">input-img</span> <span class="attr">:onChange</span>=<span class="string">"change"</span> <span class="attr">v-model</span>=<span class="string">"target"</span>&gt;</span><span class="tag">&lt;/<span class="name">input-img</span>&gt;</span></div></pre></td></tr></table></figure>
+<ul>
+<li>onChange 当选中了文件之后，回调会被调用</li>
+<li>target 会同步选择的文件；</li>
+</ul>
+<h4 id="源码展示"><a href="#源码展示" class="headerlink" title="源码展示"></a>源码展示</h4><pre><code class="html"><span class="tag">&lt;<span class="name">template</span>&gt;</span> 
+    <span class="tag">&lt;<span class="name">div</span>&gt;</span>
+        <span class="tag">&lt;<span class="name">div</span> <span class="attr">ref</span>=<span class="string">"box"</span> <span class="attr">class</span>=<span class="string">"updata"</span> <span class="attr">:class</span>=<span class="string">"{dropenter: dropenter}"</span>&gt;</span>
+            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">:id</span>=<span class="string">"inputId"</span> <span class="attr">ref</span>=<span class="string">"inputer"</span> @<span class="attr">change</span>=<span class="string">"handleFIlechange"</span>&gt;</span>
+            <span class="tag">&lt;<span class="name">label</span> <span class="attr">v-if</span>=<span class="string">"!dropenter"</span> <span class="attr">:for</span>=<span class="string">"inputId"</span>&gt;</span>点击上传/拖拽上传<span class="tag">&lt;/<span class="name">label</span>&gt;</span>
+            <span class="tag">&lt;<span class="name">label</span> <span class="attr">v-if</span>=<span class="string">"dropenter"</span>&gt;</span>拖放上传<span class="tag">&lt;/<span class="name">label</span>&gt;</span>
+            <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"err-text"</span> <span class="attr">v-show</span>=<span class="string">"errText"</span>&gt;</span><span class="comment">{{errText}}</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span>
+        <span class="tag">&lt;/<span class="name">div</span>&gt;</span>
+        <span class="tag">&lt;<span class="name">span</span> <span class="attr">v-if</span>=<span class="string">"fileName"</span>&gt;</span><span class="comment">{{fileName}}</span><span class="tag">&lt;/<span class="name">span</span>&gt;</span>
+        <span class="tag">&lt;<span class="name">span</span> <span class="attr">v-if</span>=<span class="string">"fileSize"</span>&gt;</span><span class="comment">{{fileSize}}</span> KB<span class="tag">&lt;/<span class="name">span</span>&gt;</span>
+    <span class="tag">&lt;/<span class="name">div</span>&gt;</span>
+
+<span class="tag">&lt;/<span class="name">template</span>&gt;</span>
+<span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript">
+    <span class="keyword">export</span> <span class="keyword">default</span> {
+        <span class="attr">props</span>:{
+            <span class="attr">onChange</span>:{
+                <span class="attr">type</span>: <span class="built_in">Function</span>,
+                <span class="attr">defulat</span>: <span class="literal">null</span>,
+            },
+            <span class="attr">id</span>:{
+                <span class="attr">type</span>:<span class="built_in">String</span>,
+                <span class="attr">default</span>: <span class="string">""</span>
+            }
+        },
+        data(){
+            <span class="keyword">return</span> {
+                <span class="attr">dataUrl</span>:<span class="string">""</span>,
+                <span class="attr">dropenter</span>: <span class="literal">false</span>,
+                <span class="attr">errText</span>: <span class="string">""</span>,
+                <span class="attr">dorpEnter</span>: <span class="string">""</span>,
+                <span class="attr">fileName</span>: <span class="string">""</span>,
+                <span class="attr">fileSize</span>: <span class="string">""</span>,
+                <span class="attr">inputId</span>:<span class="string">""</span>
+            }
+        },
+        <span class="attr">methods</span>:{
+            handleFIlechange(){
+                <span class="keyword">let</span> inputDom = <span class="keyword">this</span>.$refs.inputer;
+                <span class="keyword">this</span>.file = inputDom.files[<span class="number">0</span>];
+                <span class="keyword">this</span>.errText = <span class="string">""</span>;
+                <span class="keyword">let</span> size = <span class="built_in">Math</span>.floor(<span class="keyword">this</span>.file.size/<span class="number">1024</span>);
+                <span class="comment">// 大小控制</span>
+                <span class="comment">// if(size&gt;10){</span>
+                <span class="comment">//     return false;</span>
+                <span class="comment">// }</span>
+                <span class="comment">// 触发组件对象的input事件</span>
+                <span class="keyword">this</span>.$emit(<span class="string">'input'</span>,<span class="keyword">this</span>.file);
+                <span class="keyword">this</span>.fileName = <span class="keyword">this</span>.file.name;
+                 <span class="keyword">this</span>.fileSize = <span class="built_in">Math</span>.round(<span class="keyword">this</span>.file.size/<span class="number">1024</span>);
+                <span class="keyword">this</span>.onChange &amp;&amp; <span class="keyword">this</span>.onChange(<span class="keyword">this</span>.file,inputDom.value);
+                <span class="keyword">this</span>.imgPreview(<span class="keyword">this</span>.file);
+            },
+            imgPreview (file) {
+                <span class="keyword">let</span> self = <span class="keyword">this</span>;
+                <span class="comment">// 看支持不支持FileReader</span>
+                <span class="keyword">if</span> (!file || !<span class="built_in">window</span>.FileReader) <span class="keyword">return</span>;
+
+                <span class="keyword">if</span> (<span class="regexp">/^image/</span>.test(file.type)) {
+                    <span class="comment">// 创建一个reader</span>
+                    <span class="keyword">var</span> reader = <span class="keyword">new</span> FileReader();
+                    <span class="comment">// 将图片将转成 base64 格式</span>
+                    reader.readAsDataURL(file);
+                    <span class="comment">// 读取成功后的回调</span>
+                    reader.onloadend = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{
+                        self.dataUrl = <span class="keyword">this</span>.result;
+                        <span class="comment">// console.log(self.dataUrl)</span>
+                    }
+                }
+            },
+            preventDefaultEvent(eventName){
+                <span class="built_in">document</span>.addEventListener(eventName,<span class="function"><span class="keyword">function</span>(<span class="params">e</span>)</span>{
+                    e.preventDefault();
+                    <span class="comment">// console.log(e)</span>
+                },<span class="literal">false</span>);
+            },
+            addDropSupport(){
+                <span class="keyword">let</span> box = <span class="keyword">this</span>.$refs.box;
+                box.addEventListener(<span class="string">'dragenter'</span>,(e)=&gt;{
+                    e.preventDefault();
+                    <span class="keyword">this</span>.dropenter = <span class="literal">true</span>;
+                });
+                box.addEventListener(<span class="string">'dragleave'</span>,(e)=&gt;{
+                    e.preventDefault();
+                    <span class="keyword">this</span>.dropenter = <span class="literal">false</span>;
+                });
+                box.addEventListener(<span class="string">'drop'</span>,(e)=&gt;{
+                    e.preventDefault();
+                    <span class="comment">// 获得文件对象列表</span>
+                    <span class="keyword">let</span> fileList = e.dataTransfer.files;
+                    <span class="keyword">if</span>(fileList.length === <span class="number">0</span>){
+                        <span class="keyword">return</span> <span class="literal">false</span>;
+                    }
+                    <span class="comment">//           拖拽文件列表 image/jpeg</span>
+                    <span class="built_in">console</span>.log(<span class="string">"拖拽文件列表"</span>,fileList[<span class="number">0</span>].type);
+                    <span class="keyword">if</span>(fileList[<span class="number">0</span>].type.indexOf(<span class="string">'image'</span>) === <span class="number">-1</span>){
+                        <span class="keyword">this</span>.errText = <span class="string">'请选择图片'</span>
+                    }<span class="keyword">else</span>{
+                        <span class="keyword">this</span>.errText = <span class="string">''</span>
+                    }
+                    <span class="keyword">if</span>(fileList.length&gt;<span class="number">1</span>){
+                        <span class="keyword">this</span>.errText = <span class="string">"暂时不支持多文件"</span>;
+                        <span class="keyword">return</span> <span class="literal">false</span>;
+                    }
+                    <span class="keyword">this</span>.file = fileList[<span class="number">0</span>];
+                    <span class="keyword">this</span>.$emit(<span class="string">'input'</span>,<span class="keyword">this</span>.file);
+                    <span class="keyword">this</span>.fileName = <span class="keyword">this</span>.file.name;
+                    <span class="keyword">this</span>.fileSize = <span class="built_in">Math</span>.round(<span class="keyword">this</span>.file.size/<span class="number">1024</span>);
+                    <span class="keyword">this</span>.onChange &amp;&amp; <span class="keyword">this</span>.onChange(<span class="keyword">this</span>.file,<span class="keyword">this</span>.fileName);
+                    <span class="keyword">this</span>.imgPreview(<span class="keyword">this</span>.file);
+                    <span class="keyword">this</span>.dropenter = <span class="literal">false</span>;
+                })
+            },
+            generateId(){
+                <span class="keyword">var</span> nonstr = <span class="built_in">Math</span>.random().toString(<span class="number">36</span>).substring(<span class="number">3</span>,<span class="number">8</span>);
+                <span class="keyword">if</span>(!<span class="built_in">document</span>.getElementById(nonstr)){
+                    <span class="keyword">return</span> nonstr;
+                }<span class="keyword">else</span>{
+                   <span class="keyword">return</span> <span class="keyword">this</span>.generateId();
+                }
+            }
+        },
+        mounted(){
+            <span class="keyword">this</span>.inputId = <span class="keyword">this</span>.id || <span class="keyword">this</span>.generateId();
+            [<span class="string">'dragleave'</span>,<span class="string">'drog'</span>,<span class="string">'dragenter'</span>,<span class="string">'dragover'</span>].forEach(<span class="function"><span class="params">eventName</span>=&gt;</span>{
+                <span class="comment">//console.log(eventName)</span>
+                <span class="keyword">this</span>.preventDefaultEvent(eventName);
+            });
+            <span class="keyword">this</span>.addDropSupport();
+        }
+    }
+</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span>
+<span class="tag">&lt;<span class="name">style</span> <span class="attr">scoped</span>&gt;</span><span class="css">
+    <span class="selector-class">.updata</span>{
+        <span class="attribute">display</span>:inline-block;
+        <span class="attribute">position</span>: relative;
+        <span class="attribute">width</span>: <span class="number">100%</span>;
+        <span class="attribute">height</span>: <span class="number">100px</span>;
+        <span class="attribute">border</span>: <span class="number">1px</span> dashed <span class="number">#aaaaaa</span>;
+        <span class="attribute">text-align</span>: center;
+        <span class="attribute">line-height</span>: <span class="number">100px</span>;
+    }
+    <span class="selector-class">.updata</span><span class="selector-class">.dropenter</span>{
+        <span class="attribute">box-shadow</span>: <span class="number">0</span> <span class="number">0</span> <span class="number">3px</span> <span class="number">#aaaaaa</span>;
+    }
+    <span class="selector-tag">input</span>{
+        <span class="attribute">position</span>: absolute;
+        <span class="attribute">left</span>: -<span class="number">9999px</span>;
+    }
+    <span class="selector-tag">label</span>{
+        <span class="attribute">position</span>: absolute;
+        <span class="attribute">left</span>: <span class="number">0</span>;
+        <span class="attribute">top</span>: <span class="number">0</span>;
+        <span class="attribute">right</span>: <span class="number">0</span>;
+        <span class="attribute">bottom</span>: <span class="number">0</span>;
+        <span class="attribute">z-index</span>: <span class="number">10</span>;
+    }
+    <span class="selector-class">.err-text</span>{
+        <span class="attribute">position</span>: absolute;
+        <span class="attribute">bottom</span>: <span class="number">0</span>;
+        <span class="attribute">left</span>: <span class="number">0</span>;
+        <span class="attribute">line-height</span>: <span class="number">22px</span>;
+        <span class="attribute">color</span>: red;
+    }
+</span><span class="tag">&lt;/<span class="name">style</span>&gt;</span>
+</code></pre>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> vue </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[FormData上传]]></title>
+      <url>http://yoursite.com/2017/03/01/FormData%E4%B8%8A%E4%BC%A0/</url>
+      <content type="html"><![CDATA[<blockquote>
+<p>学习了nodejs，就想实现一下有进度条的文件上传，</p>
+</blockquote>
+<p>在做这个功能的时候遇到的问题</p>
+<ul>
+<li>用普通的ajax无法实现文件上传，只能post，get，一些json，string字符串；</li>
+<li>想要上传文件或者图片，可以添加form上传；注意需要在form上添加 标示  enctype=”multipart/form-data”<ul>
+<li>缺点，这样会倒置页面的刷新；很糟糕有没有</li>
+</ul>
+</li>
+<li>还可以在页面中添加一个ifame,将表单提交到ifame中，不过，一听说有iframe就有点糟心有没有；</li>
+</ul>
+<p>于是就有了下面的东西；<br>请自动忽略没有样式(只是为了实现功能)这个梗，啊哈哈；</p>
+<p>好了废话少说直接上代码</p>
+<h2 id="前端部分代码"><a href="#前端部分代码" class="headerlink" title="前端部分代码"></a>前端部分代码</h2><figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div></pre></td><td class="code"><pre><div class="line"><span class="meta">&lt;!doctype html&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">"en"</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>Document<span class="tag">&lt;/<span class="name">title</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="undefined"></span></div><div class="line">        .progressBar&#123;</div><div class="line">            width: 150px;</div><div class="line">            height: 15px;</div><div class="line">            border: 1px solid red;</div><div class="line">            /*display: none;*/</div><div class="line">            border-radius: 5px;</div><div class="line">        &#125;</div><div class="line">        .bar &#123;</div><div class="line">            width: 0;</div><div class="line">            height: 100%;</div><div class="line">            background: #08d09a;</div><div class="line">            border-radius: 5px;</div><div class="line">            line-height: 0;</div><div class="line">            margin: 0;</div><div class="line">        &#125;</div><div class="line">    <span class="tag">&lt;/<span class="name">style</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">id</span>=<span class="string">"submit"</span>&gt;</span>提交<span class="tag">&lt;/<span class="name">button</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"file"</span> <span class="attr">id</span>=<span class="string">"fileInputElement"</span>/&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"progressBar"</span> <span class="attr">style</span>=<span class="string">"display: none;"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">p</span> <span class="attr">class</span>=<span class="string">"bar"</span>&gt;</span><span class="tag">&lt;/<span class="name">p</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="xml"></span></div><div class="line">    var btn = document.getElementById('submit');</div><div class="line">    var fileInputElement = document.getElementById('fileInputElement');</div><div class="line">    var bar = document.getElementsByClassName('bar')[0];</div><div class="line">    var progressBar = document.getElementsByClassName('progressBar')[0];</div><div class="line"></div><div class="line">    btn.onclick =function()&#123;</div><div class="line">        progressBar.style.display = 'block';</div><div class="line">        var oMyForm = new FormData();</div><div class="line">        oMyForm.append("username", "Groucho");</div><div class="line">        oMyForm.append("accountnum", 123456); </div><div class="line">        // 数字123456被立即转换成字符串"123456"</div><div class="line"></div><div class="line">        // fileInputElement中已经包含了用户所选择的文件</div><div class="line">        oMyForm.append("userfile", fileInputElement.files[0]);</div><div class="line"></div><div class="line">        var oFileBody = '<span class="tag">&lt;<span class="name">a</span> <span class="attr">id</span>=<span class="string">"a"</span>&gt;</span><span class="tag">&lt;<span class="name">b</span> <span class="attr">id</span>=<span class="string">"b"</span>&gt;</span>hey!<span class="tag">&lt;/<span class="name">b</span>&gt;</span><span class="tag">&lt;/<span class="name">a</span>&gt;</span>'; // Blob对象包含的文件内容</div><div class="line">        var oBlob = new Blob([oFileBody], &#123; type: "text/xml"&#125;);</div><div class="line"></div><div class="line"></div><div class="line">        var oReq = new XMLHttpRequest();</div><div class="line"></div><div class="line">        oReq.open("POST", "/formupload");</div><div class="line">        // 文件上传过程的回调</div><div class="line">        oReq.upload.onprogress = function(e) &#123;</div><div class="line">            console.log((e.loaded/e.total)*100+'%')</div><div class="line">            bar.style.width = (e.loaded/e.total)*100+'%';</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        /**</div><div class="line">         *   e.loaded 文件已经上传了的大小</div><div class="line">         *   e.total  文件总大小</div><div class="line">          e.loaded/e.total)*100+'%'  转化成比例；</div><div class="line">         */</div><div class="line">        // 文件上传完毕的回调</div><div class="line">        oReq.upload.onloadend = function(e) &#123;</div><div class="line">            console.log('接收完成'+e.loaded+'/'+e.total);</div><div class="line">            setTimeout(function()&#123;</div><div class="line">                progressBar.style.display = 'none';</div><div class="line">                bar.style.width = 0;</div><div class="line">            &#125;,1000)</div><div class="line">        &#125;</div><div class="line">        oReq.send(oMyForm);</div><div class="line">    &#125;</div><div class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></div></pre></td></tr></table></figure>
+<h3 id="用到了-FormData-类；"><a href="#用到了-FormData-类；" class="headerlink" title="用到了  FormData 类；"></a>用到了  <em>FormData</em> 类；</h3><blockquote>
+<p>使用方法</p>
+<ul>
+<li>通过new FormData 创建一个form提交实例对象；此对象会有append方法，<ul>
+<li>用法 oMyform.append(name,value) name是一个字段，value是对应的值(可以是字符串，数字，file文件（通过dom.files[0]获得）)</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> oMyForm = <span class="keyword">new</span> FormData();</div><div class="line">oMyForm.append(<span class="string">"username"</span>, <span class="string">"Groucho"</span>);</div><div class="line">oMyForm.append(<span class="string">"accountnum"</span>, <span class="number">123456</span>);</div><div class="line">oMyForm.append(<span class="string">"userfile"</span>, fileInputElement.files[<span class="number">0</span>]);</div></pre></td></tr></table></figure>
+<h3 id="用到了XMLHttpRequest-的-onprogress-和-onloadend"><a href="#用到了XMLHttpRequest-的-onprogress-和-onloadend" class="headerlink" title="用到了XMLHttpRequest 的 onprogress  和  onloadend"></a>用到了XMLHttpRequest 的 onprogress  和  onloadend</h3><p><em>注意</em> onprogress、onloadend、需要通过xhr.upload 调用如下；</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">oReq.upload.onprogress=<span class="function"><span class="keyword">function</span>(<span class="params">e</span>)</span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(e.loaded)</div><div class="line">    <span class="built_in">console</span>.log(e.total)</div><div class="line">&#125;;</div><div class="line">oReq.upload.onloadend=<span class="function"><span class="keyword">function</span>(<span class="params">e</span>)</span>&#123;&#125;;</div></pre></td></tr></table></figure>
+<h1 id="nodejs-后端的处理"><a href="#nodejs-后端的处理" class="headerlink" title="nodejs 后端的处理"></a>nodejs 后端的处理</h1><blockquote>
+<p>主要用到了formidable模块</p>
+</blockquote>
+<h2 id="主要代码逻辑"><a href="#主要代码逻辑" class="headerlink" title="主要代码逻辑"></a>主要代码逻辑</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> * [导出一个中间件，formupload，用于处理文件上传；]</div><div class="line"> */</div><div class="line">exports.formupload = <span class="function"><span class="keyword">function</span>(<span class="params">req,res,next</span>)</span>&#123;</div><div class="line">    <span class="comment">//console.log(req);</span></div><div class="line">    <span class="keyword">var</span> form = <span class="keyword">new</span> formidable.IncomingForm();</div><div class="line">    <span class="keyword">var</span> uploadDir = path.normalize(__dirname+<span class="string">'/'</span>+<span class="string">"../avatar"</span>);</div><div class="line">    form.uploadDir = uploadDir;</div><div class="line">    <span class="built_in">console</span>.log(uploadDir);</div><div class="line">    form.parse(req, <span class="function"><span class="keyword">function</span>(<span class="params">err, fields, files</span>) </span>&#123;</div><div class="line">        <span class="keyword">for</span>(item <span class="keyword">in</span> files)&#123;</div><div class="line">            (<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</div><div class="line">                <span class="keyword">var</span> oldname = files[item].path;</div><div class="line">                <span class="keyword">var</span> newname = files[item].name === <span class="string">'blob'</span> ? oldname+<span class="string">'.xml'</span> : oldname+<span class="string">"."</span>+files[item].name.split(<span class="string">'.'</span>)[<span class="number">1</span>];</div><div class="line">                fs.rename(oldname,newname,<span class="function"><span class="keyword">function</span>(<span class="params">err</span>)</span>&#123;</div><div class="line">                    <span class="keyword">if</span>(err) <span class="built_in">console</span>.log(err);</div><div class="line">                    <span class="built_in">console</span>.log(<span class="string">'修改成功'</span>);</div><div class="line">                &#125;)</div><div class="line">            &#125;)(item);</div><div class="line">        &#125;</div><div class="line">        <span class="built_in">console</span>.log(util.inspect(&#123;<span class="attr">fields</span>: fields, <span class="attr">files</span>: files&#125;));</div><div class="line">        res.send(<span class="string">'2'</span>);</div><div class="line">    &#125;);</div></pre></td></tr></table></figure>
+<h2 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h2><ul>
+<li>for 循环中有异步逻辑，导致异步逻辑出现问题；</li>
+<li>formidable 的上传文件路径用相对路径会找不到所指定的路径</li>
+</ul>
+<h2 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h2><ul>
+<li>可以用闭包实现，每次传进到闭包的变量不会受到外界的影响；</li>
+<li>用牛逼的__dirname 变量；指向当前文件的绝对路径；</li>
+</ul>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> html5 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[mockJS笔记]]></title>
+      <url>http://yoursite.com/2017/03/01/mockJS%E7%AC%94%E8%AE%B0/</url>
+      <content type="html"><![CDATA[<h1 id="mockjs-实战-（nodejs-集成-mock-js）"><a href="#mockjs-实战-（nodejs-集成-mock-js）" class="headerlink" title="mockjs 实战 （nodejs 集成 mock.js）"></a>mockjs 实战 （nodejs 集成 mock.js）</h1><img src="/2017/03/01/mockJS笔记/mockjs.png" alt="mockjs.png" title="">
+<blockquote>
+<p>mockjs 可以做什么</p>
+</blockquote>
+<ul>
+<li>根据数据模板生成模拟数据</li>
+<li>模拟ajax请求 生成并返回模拟数据</li>
+<li>基于html 模板生成模拟数据</li>
+</ul>
+<blockquote>
+<p>为什么要用mock.js</p>
+</blockquote>
+<ul>
+<li>开发时，后端还没有完成数据输出，前端只能写静态模拟数据</li>
+<li>将模拟数据写在js文件里面；数据太长了；</li>
+<li>后端完成后，挨个改接口api url</li>
+<li>写模拟数据太累；需要收集很多的资源，图片，地址，随机数，ip等；</li>
+</ul>
+<blockquote>
+<p>如何使用mock.js 安装</p>
+</blockquote>
+<ul>
+<li>npm i mock.js</li>
+</ul>
+<blockquote>
+<p>mockjs 语法规范</p>
+</blockquote>
+<h3 id="数据模板"><a href="#数据模板" class="headerlink" title="数据模板"></a>数据模板</h3><blockquote>
+<p>属性值</p>
+</blockquote>
+<ul>
+<li>string 重复value<ul>
+<li>‘name | min-max’:’value’</li>
+<li>‘name | count’:’value’</li>
+<li>‘name | nunber+1’:”value”</li>
+</ul>
+</li>
+</ul>
+<p>提供jsonp来请求；</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//express</span></div><div class="line">router.get(<span class="string">'/mockapi'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123;</div><div class="line">    <span class="keyword">var</span> callback = req.query.callback;</div><div class="line">    <span class="keyword">var</span> Mock = <span class="built_in">require</span>(<span class="string">'mockjs'</span>);</div><div class="line">    <span class="keyword">var</span> data = Mock.mock(&#123;</div><div class="line">        <span class="comment">// 属性 list 的值是一个数组，其中含有 1 到 10 个元素</span></div><div class="line">        <span class="string">'list|1-10'</span>: [&#123;</div><div class="line">            <span class="comment">// 属性 id 是一个自增数，起始值为 1，每次增 1</span></div><div class="line">            <span class="string">'id|+1'</span>: <span class="number">1</span></div><div class="line">        &#125;]</div><div class="line">    &#125;)</div><div class="line">    <span class="keyword">var</span> ret = <span class="built_in">JSON</span>.stringify(data, <span class="literal">null</span>, <span class="number">4</span>);</div><div class="line">    <span class="built_in">console</span>.log(ret);</div><div class="line">    ret = callback + <span class="string">"("</span> + ret + <span class="string">")"</span>;</div><div class="line">    res.send(ret);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h1 id="mock-进阶-mock-server"><a href="#mock-进阶-mock-server" class="headerlink" title="mock 进阶 mock-server"></a>mock 进阶 mock-server</h1><p><a href="https://github.com/ufologist/puer-mock" target="_blank" rel="external">puer-mock</a>;</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">    <span class="attr">"api"</span>: &#123;</div><div class="line">        <span class="attr">"GET /api/users"</span>: &#123;</div><div class="line">            <span class="attr">"response"</span>: &#123;</div><div class="line">                <span class="attr">"users|10-30"</span>: [&#123;</div><div class="line">                    <span class="attr">"id"</span>: <span class="string">"@id"</span></div><div class="line">                &#125;]</div><div class="line">            &#125;</div><div class="line">        &#125;,</div><div class="line">        <span class="attr">"GET /api/lists"</span>: &#123;</div><div class="line">            <span class="attr">"response"</span>: &#123;</div><div class="line">                <span class="attr">"lists|2-5"</span>: [&#123;</div><div class="line">                    <span class="attr">"id"</span>: <span class="string">"@id"</span>,</div><div class="line">                    <span class="attr">"name"</span>: <span class="string">"@cname"</span>,</div><div class="line">                    <span class="attr">"title"</span>: <span class="string">"@title"</span></div><div class="line">                &#125;]</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<blockquote>
+<p>操作步骤</p>
+</blockquote>
+<ul>
+<li>npm install puer -g</li>
+<li>cd yourprojectrootdir</li>
+<li>npm install puer-mock –save-dev</li>
+<li>copy node_modules/puer-mock/example files to your project root directory</li>
+<li>cd yourprojectrootdir</li>
+<li>puer -a _mockserver.js</li>
+<li>添加npm 命令 在packege.json 中添加</li>
+<li>“mock”: “puer -a _mockserver.js”</li>
+<li>npm run mock</li>
+<li>查看api localhost:8000/api/users</li>
+</ul>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> 前端库 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[ECMAScript6]]></title>
+      <url>http://yoursite.com/2017/03/01/es6/</url>
+      <content type="html"><![CDATA[<img src="/2017/03/01/es6/es6.jpg" alt="es6.jpg" title="">
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div><div class="line">146</div><div class="line">147</div><div class="line">148</div><div class="line">149</div><div class="line">150</div><div class="line">151</div><div class="line">152</div><div class="line">153</div><div class="line">154</div><div class="line">155</div><div class="line">156</div><div class="line">157</div><div class="line">158</div><div class="line">159</div><div class="line">160</div><div class="line">161</div><div class="line">162</div><div class="line">163</div><div class="line">164</div><div class="line">165</div><div class="line">166</div><div class="line">167</div><div class="line">168</div><div class="line">169</div><div class="line">170</div><div class="line">171</div><div class="line">172</div><div class="line">173</div><div class="line">174</div><div class="line">175</div><div class="line">176</div><div class="line">177</div><div class="line">178</div><div class="line">179</div><div class="line">180</div><div class="line">181</div><div class="line">182</div><div class="line">183</div><div class="line">184</div><div class="line">185</div><div class="line">186</div><div class="line">187</div><div class="line">188</div><div class="line">189</div><div class="line">190</div><div class="line">191</div><div class="line">192</div><div class="line">193</div><div class="line">194</div><div class="line">195</div><div class="line">196</div><div class="line">197</div><div class="line">198</div><div class="line">199</div><div class="line">200</div><div class="line">201</div><div class="line">202</div><div class="line">203</div><div class="line">204</div><div class="line">205</div><div class="line">206</div><div class="line">207</div><div class="line">208</div><div class="line">209</div><div class="line">210</div><div class="line">211</div><div class="line">212</div><div class="line">213</div><div class="line">214</div><div class="line">215</div><div class="line">216</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// let有  块作用域 var没有</span></div><div class="line"><span class="comment">// const 定义常量  定义一次就不再改变</span></div><div class="line"><span class="comment">/*</span></div><div class="line">let firstname = "haha";</div><div class="line">let lastname = 'heheh';</div><div class="line">console.log(`my name is $&#123;firstname&#125; $&#123;lastname&#125;`)*/</div><div class="line"></div><div class="line"><span class="comment">/*</span></div><div class="line">let person = &#123;</div><div class="line">    firstName :'haha',</div><div class="line">    lastName: 'hehe',</div><div class="line">    sayName()&#123;</div><div class="line">        console.log(`my name is $&#123;this.firstName&#125; $&#123;this.lastName&#125;`)</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line">person.sayName()*/</div><div class="line"></div><div class="line"><span class="comment">/*var add =(a,b) =&gt;&#123;</span></div><div class="line">    return a+b; </div><div class="line">&#125;*/</div><div class="line"><span class="comment">/*var add =(a,b) =&gt;a+b;</span></div><div class="line">console.log(add(2,3))*/</div><div class="line"></div><div class="line"><span class="comment">/*</span></div><div class="line">let numbers = [2,3,4,5,6.7];</div><div class="line">let doubled = numbers.map(function(n)&#123;</div><div class="line">    return n*2;</div><div class="line">&#125;)</div><div class="line">console.log(doubled)*/</div><div class="line"></div><div class="line"></div><div class="line"><span class="comment">/*let numbers = [2,3,4,5,6.7];</span></div><div class="line">// let doubled = numbers.map((n)=&gt;n*2)</div><div class="line">let doubled = numbers.map(n=&gt;n*2)</div><div class="line">console.log(doubled)*/</div><div class="line"></div><div class="line"></div><div class="line"><span class="comment">/*let person = &#123;</span></div><div class="line">    name: 'liu',</div><div class="line">    sayName: function ()&#123;</div><div class="line">        console.log(`hi i am $&#123;this.name&#125;`);</div><div class="line">    &#125;</div><div class="line">&#125;*/</div><div class="line"><span class="comment">/*let person = &#123;</span></div><div class="line">    name: 'liu',</div><div class="line">    hobbies: ['haha','hehe'],</div><div class="line">    sayName()&#123;</div><div class="line">        console.log(`hi i am $&#123;this.name&#125;`);</div><div class="line">    &#125;,</div><div class="line">    showHobbies: function ()&#123;</div><div class="line">        var that = this;</div><div class="line">        this.hobbies.forEach(function(h)&#123;</div><div class="line">            console.log(`$&#123;that.name&#125; likes $&#123;h&#125;`)</div><div class="line">        &#125;)</div><div class="line">    &#125;</div><div class="line">&#125;*/</div><div class="line"><span class="comment">/*let person = &#123;</span></div><div class="line">    name: 'liu',</div><div class="line">    hobbies: ['haha','hehe'],</div><div class="line">    sayName()&#123;</div><div class="line">        console.log(`hi i am $&#123;this.name&#125;`);</div><div class="line">    &#125;,</div><div class="line">    showHobbies: function ()&#123;</div><div class="line">        this.hobbies.forEach((h)=&gt;&#123;</div><div class="line">            console.log(`$&#123;this.name&#125; likes $&#123;h&#125;`)</div><div class="line">        &#125;)</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line">person.sayName()</div><div class="line">person.showHobbies()*/</div><div class="line"></div><div class="line"></div><div class="line"><span class="comment">//-----------------------</span></div><div class="line"><span class="comment">/*let sum = function()&#123;</span></div><div class="line">    console.log(arguments);</div><div class="line">&#125;</div><div class="line">sum(2,3,4,5)*/</div><div class="line"></div><div class="line"><span class="comment">/*let sum = function()&#123;</span></div><div class="line">    return Array.prototype.reduce.call(arguments,(pre,cur)=&gt;&#123;</div><div class="line">        console.log('pre---'+pre,'cur---'+cur)</div><div class="line">        return pre+cur;</div><div class="line">    &#125;)</div><div class="line">&#125;</div><div class="line">console.log(sum(1,2,3))*/</div><div class="line"><span class="comment">/*</span></div><div class="line">let sum = function(...args)&#123;</div><div class="line">    // console.log(args)</div><div class="line">    return args.reduce((pre,cur)=&gt;pre + cur)</div><div class="line">&#125;</div><div class="line">console.log(sum(2,3,4))*/</div><div class="line"></div><div class="line"><span class="comment">//----------------------</span></div><div class="line"><span class="comment">/*let mutiply = (mul, ...numbers)=&gt;&#123;</span></div><div class="line">    console.log(mul,numbers);</div><div class="line">    return numbers.map((n)=&gt;&#123;</div><div class="line">        return mul*n;</div><div class="line">    &#125;)</div><div class="line">&#125;</div><div class="line">let result = mutiply(2,2,3,4,5)</div><div class="line">console.log(result)*/</div><div class="line"></div><div class="line"><span class="comment">//----------</span></div><div class="line"></div><div class="line"><span class="comment">/*</span></div><div class="line">let max = Math.max(2,3,4,5);</div><div class="line">console.log(max)*/</div><div class="line"></div><div class="line"><span class="comment">/*let numbers = [4,6,5,6,20];</span></div><div class="line">let max = Math.max.apply(null, numbers);</div><div class="line">console.log(max)*/</div><div class="line"></div><div class="line"><span class="comment">/*let numbers =[12,3,4,5];</span></div><div class="line">let max = Math.max(...numbers);</div><div class="line">console.log(max)*/</div><div class="line"></div><div class="line"><span class="comment">/*let numbers = [2,3,4];</span></div><div class="line">let newNumbers = [3,4,55];</div><div class="line">let concatArray = newNumbers.concat(numbers);</div><div class="line">console.log(concatArray)*/</div><div class="line"></div><div class="line"><span class="comment">/*let numbers = [2,3,4];</span></div><div class="line">let newNumbers = [3,4,55];</div><div class="line">let concatArray = [...numbers,...newNumbers];</div><div class="line">console.log(concatArray)*/</div><div class="line"></div><div class="line"></div><div class="line"><span class="comment">/*------------destructuring----------------*/</span></div><div class="line"><span class="comment">//object 解构</span></div><div class="line"></div><div class="line"><span class="comment">/*let person = &#123;</span></div><div class="line">    name: 'liu',</div><div class="line">    age: 30,</div><div class="line">    location: "jianhui",</div><div class="line">&#125;;</div><div class="line">person.age; //30</div><div class="line">person['age']; //30</div><div class="line">// 定义的变量是value 值是 key</div><div class="line">let &#123;age: personAge,name: personName,location: personLocation&#125; = person;</div><div class="line">console.log(personAge);</div><div class="line">console.log(personName);</div><div class="line">console.log(personLocation);*/</div><div class="line"></div><div class="line"><span class="comment">//数组解构</span></div><div class="line"><span class="comment">/*let numbers = [1,2,3,4];</span></div><div class="line">let first = numbers[0];</div><div class="line">let second = numbers[1];*/</div><div class="line"></div><div class="line"><span class="comment">/*let numbers = [1,2,3,4];</span></div><div class="line">let [first,second,,fourth] = numbers;</div><div class="line">console.log(first,second,fourth) // 1,2,4</div><div class="line">*/</div><div class="line"></div><div class="line"><span class="comment">/*let numbers = [1,2,3,4];</span></div><div class="line">let [first,second,...therest] = numbers;</div><div class="line">console.log(first,second,therest)  // 1,2,[3,4]*/</div><div class="line"></div><div class="line"></div><div class="line"><span class="comment">/*--------promise---------------*/</span></div><div class="line"><span class="meta">'use strict'</span></div><div class="line"></div><div class="line"><span class="keyword">let</span> mypromise = <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve,reject</span>)=&gt;</span>&#123;</div><div class="line">    <span class="comment">// 异步resolve操作</span></div><div class="line">    setTimeout(<span class="function"><span class="params">()</span>=&gt;</span>&#123;</div><div class="line">        resolve(<span class="string">'good to go!'</span>)</div><div class="line">    &#125;,<span class="number">1000</span>)</div><div class="line">    <span class="comment">//异步reject操作</span></div><div class="line">    <span class="comment">// setTimeout(()=&gt;&#123;</span></div><div class="line">    <span class="comment">//  reject('uh oh')</span></div><div class="line">    <span class="comment">// &#125;,500)</span></div><div class="line">&#125;)</div><div class="line"></div><div class="line"><span class="comment">/*mypromise.then((res)=&gt;&#123;</span></div><div class="line">    console.log(res)</div><div class="line">&#125;,(err)=&gt;&#123;</div><div class="line">    console.log(err)</div><div class="line">&#125;)</div><div class="line">console.log('good haha')*/</div><div class="line"><span class="comment">// 同等于下面</span></div><div class="line"><span class="comment">/*mypromise.then((res)=&gt;&#123;</span></div><div class="line">    console.log(res)</div><div class="line">&#125;).catch((err)=&gt;&#123;</div><div class="line">    console.log(err)</div><div class="line">&#125;)</div><div class="line">console.log('good haha')*/</div><div class="line"></div><div class="line"><span class="comment">// 多个promise</span></div><div class="line"><span class="comment">/*let myPromise2 = new Promise((resolve,reject)=&gt;&#123;</span></div><div class="line">    setTimeout(()=&gt;&#123;</div><div class="line">        resolve('promise 2 - the promise')</div><div class="line">    &#125;,1500)</div><div class="line">&#125;)</div><div class="line">Promise.all([mypromise,myPromise2])</div><div class="line">    .then((data)=&gt;&#123;</div><div class="line">        console.log(data)</div><div class="line">    &#125;)</div><div class="line">    .catch((err)=&gt;&#123;</div><div class="line">        console.log(err)</div><div class="line">    &#125;)*/</div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"><span class="comment">//api http://api.icndb.com/jokes/random/10</span></div><div class="line"><span class="comment">// fetch 资料 https://github.com/camsong/blog/issues/2</span></div><div class="line"><span class="comment">/*fetch('http://api.icndb.com/jokes/random/10')</span></div><div class="line">    .then((res)=&gt;&#123;</div><div class="line">        // res.json 返回的是promise</div><div class="line">        res.json().then((data)=&gt;&#123;</div><div class="line">            console.log(data);</div><div class="line">        &#125;)</div><div class="line">    &#125;)</div><div class="line">    .catch((err)=&gt;&#123;</div><div class="line">        console.log(err)</div><div class="line">    &#125;)*/</div><div class="line"></div><div class="line"><span class="comment">//  pokeapi.co</span></div></pre></td></tr></table></figure>]]></content>
+      
+        
+        <tags>
+            
+            <tag> js </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[编辑器/IDE]]></title>
+      <url>http://yoursite.com/2017/03/01/%E7%BC%96%E8%BE%91%E5%99%A8-IDE/</url>
+      <content type="html"><![CDATA[<img src="/2017/03/01/编辑器-IDE/sublime.jpg" alt="sublime.jpg" title="">
+<blockquote>
+<p>安装Package Control的方法如下：</p>
+</blockquote>
+<p>点击菜单中的 “View”–“Show Console”（也可通过快捷键 Ctrl + ` 打开，不过可能因与系统其他软件快捷键冲突而打不开）调出 Console。然后把下面的代码粘贴进去后回车即可，需稍微等待一段时间。（以下代码可能会因更新而导致失效，请以官网代码为准。）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">/*Sublime Text 2 代码*/</div><div class="line">import urllib2,os,hashlib; h = &apos;2915d1851351e5ee549c20394736b442&apos; + &apos;8bc59f460fa1548d1514676163dafc88&apos;; pf = &apos;Package Control.sublime-package&apos;; ipp = sublime.installed_packages_path(); os.makedirs( ipp ) if not os.path.exists(ipp) else None; urllib2.install_opener( urllib2.build_opener( urllib2.ProxyHandler()) ); by = urllib2.urlopen( &apos;http://packagecontrol.io/&apos; + pf.replace(&apos; &apos;, &apos;%20&apos;)).read(); dh = hashlib.sha256(by).hexdigest(); open( os.path.join( ipp, pf), &apos;wb&apos; ).write(by) if dh == h else None; print(&apos;Error validating download (got %s instead of %s), please try manual install&apos; % (dh, h) if dh != h else &apos;Please restart Sublime Text to finish installation&apos;)</div><div class="line"> </div><div class="line">/*Sublime Text 3 代码*/</div><div class="line">import urllib.request,os,hashlib; h = &apos;2915d1851351e5ee549c20394736b442&apos; + &apos;8bc59f460fa1548d1514676163dafc88&apos;; pf = &apos;Package Control.sublime-package&apos;; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( &apos;http://packagecontrol.io/&apos; + pf.replace(&apos; &apos;, &apos;%20&apos;)).read(); dh = hashlib.sha256(by).hexdigest(); print(&apos;Error validating download (got %s instead of %s), please try manual install&apos; % (dh, h)) if dh != h else open(os.path.join( ipp, pf), &apos;wb&apos; ).write(by)</div></pre></td></tr></table></figure>
+<blockquote>
+<p>重启Sublime Text即可。</p>
+<p>干净的卸载sublime 删除下面路径的 sublime文件夹</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">C:\Users\Administrator\AppData\Roaming</div></pre></td></tr></table></figure>
+<blockquote>
+<p>sublime 破解注册码</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">—– BEGIN LICENSE —–</div><div class="line">Ryan Clark</div><div class="line">Single User License</div><div class="line">EA7E-812479</div><div class="line">2158A7DE B690A7A3 8EC04710 006A5EEB</div><div class="line">34E77CA3 9C82C81F 0DB6371B 79704E6F</div><div class="line">93F36655 B031503A 03257CCC 01B20F60</div><div class="line">D304FA8D B1B4F0AF 8A76C7BA 0FA94D55</div><div class="line">56D46BCE 5237A341 CD837F30 4D60772D</div><div class="line">349B1179 A996F826 90CDB73C 24D41245</div><div class="line">FD032C30 AD5E7241 4EAA66ED 167D91FB</div><div class="line">55896B16 EA125C81 F550AF6B A6820916</div><div class="line">—— END LICENSE</div></pre></td></tr></table></figure>
+<h2 id="sublime常用插件"><a href="#sublime常用插件" class="headerlink" title="sublime常用插件"></a>sublime常用插件</h2><blockquote>
+<p><a href="http://macplay.leanote.com/post/%E8%BF%91%E4%B9%8E%E5%AE%8C%E7%BE%8E%E7%9A%84-Markdown-%E5%86%99%E4%BD%9C%E4%BD%93%E9%AA%8C-Sublime-Text-3-OmniMarkupPreviewer" target="_blank" rel="external">近乎完美的 Markdown 写作体验 - Sublime Text 3 + OmniMarkupPreviewer</a><br>快捷键 ctrl-alt-o</p>
+</blockquote>
+<ul>
+<li>[sublime格式化插件 CodeFormatter]</li>
+<li>Emmet</li>
+<li>html beautify</li>
+<li>css3</li>
+<li>DocBlockr<ul>
+<li>一个真正简单的方式来轻松地创建许多语言包括JavaScript，PHP和CoffeeScript的文档块。只要在函数的上面输入/**，按Tab就可以了。DocBlockr会观察函数需要的变量名和类型，并创建文档块。</li>
+</ul>
+</li>
+<li>jquery</li>
+<li>BracketHighlighter 高亮元素</li>
+<li>AllAutocomplete  可以搜索全部打开的标签页进行提示</li>
+<li>MarkdownEditing markdown 写作提示工具</li>
+<li>AutoFileName 自动补全路径</li>
+<li>ColorPicker    一个完整的选色工具可以直接在你的编辑器中使用     Ctrl/Cmd + Shift + C。</li>
+<li>IMESupport 中文输入法跟随</li>
+<li>SideBar Enhancements  顾名思义：增强左边导航栏的作用；</li>
+<li>bootstrap snippets</li>
+<li><p>Sublime​Code​Intel </p>
+<blockquote>
+<p>持所有 Komode Editor 支持的代码语言，如：JavaScript, Mason, XBL, XUL, RHTML, SCSS, Python, HTML, Ruby, Python3, XML, Sass, XSLT, Django, HTML5, Perl, CSS, Twig, Less, Smarty, Node.js, Tcl, TemplateToolkit, PHP等。<br>提供以下功能：</p>
+</blockquote>
+</li>
+<li><p>打开并跳转到函数/类等的符号定义位置</p>
+</li>
+<li>实时显示模块/符号的自动补全功能</li>
+<li>在状态栏显示当前函数的相关信息<blockquote>
+<p>插件相关:</p>
+<ul>
+<li>适用版本：Sublime Text 2 / Sublime Text 3</li>
+<li>调用方法：跳转到定义位置（Alt+Click 或 Control+Windows+Alt+Up）、返回（Control+Windows+Alt+Left）</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<p>sublime 主题</p>
+<ul>
+<li>Monokai Extended</li>
+</ul>
+<p>sublime sass支持</p>
+</blockquote>
+<ol>
+<li><a href="http://rubyinstaller.org/downloads/" target="_blank" rel="external">安装ruby</a></li>
+<li><a href="http://www.w3cplus.com/sassguide/install.html" target="_blank" rel="external">ruby安装sass</a></li>
+<li><a href="http://blog.dimpurr.com/sublime-sass/" target="_blank" rel="external">sublime 安装sass插件</a></li>
+<li>sublime 安装插件 SublimeOnSaveBuild （每次保存的时候就进行编译）</li>
+</ol>
+<blockquote>
+<p>sublime js错误提示插件 (JSHint与JSHint Gutter)[<a href="http://jarontai.github.io/blog/2014/11/28/sublime-jshint/" target="_blank" rel="external">http://jarontai.github.io/blog/2014/11/28/sublime-jshint/</a>]</p>
+</blockquote>
+<h1 id="webstorm-破解"><a href="#webstorm-破解" class="headerlink" title="webstorm 破解"></a>webstorm 破解</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">43B4A73YYJ-eyJsaWNlbnNlSWQiOiI0M0I0QTczWVlKIiwibGljZW5zZWVOYW1lIjoibGFuIHl1IiwiYXNzaWduZWVOYW1lIjoiIiwiYXNzaWduZWVFbWFpbCI6IiIsImxpY2Vuc2VSZXN0cmljdGlvbiI6IkZvciBlZHVjYXRpb25hbCB1c2Ugb25seSIsImNoZWNrQ29uY3VycmVudFVzZSI6ZmFsc2UsInByb2R1Y3RzIjpbeyJjb2RlIjoiSUkiLCJwYWlkVXBUbyI6IjIwMTctMDItMjUifSx7ImNvZGUiOiJBQyIsInBhaWRVcFRvIjoiMjAxNy0wMi0yNSJ9LHsiY29kZSI6IkRQTiIsInBhaWRVcFRvIjoiMjAxNy0wMi0yNSJ9LHsiY29kZSI6IlBTIiwicGFpZFVwVG8iOiIyMDE3LTAyLTI1In0seyJjb2RlIjoiRE0iLCJwYWlkVXBUbyI6IjIwMTctMDItMjUifSx7ImNvZGUiOiJDTCIsInBhaWRVcFRvIjoiMjAxNy0wMi0yNSJ9LHsiY29kZSI6IlJTMCIsInBhaWRVcFRvIjoiMjAxNy0wMi0yNSJ9LHsiY29kZSI6IlJDIiwicGFpZFVwVG8iOiIyMDE3LTAyLTI1In0seyJjb2RlIjoiUEMiLCJwYWlkVXBUbyI6IjIwMTctMDItMjUifSx7ImNvZGUiOiJSTSIsInBhaWRVcFRvIjoiMjAxNy0wMi0yNSJ9LHsiY29kZSI6IldTIiwicGFpZFVwVG8iOiIyMDE3LTAyLTI1In0seyJjb2RlIjoiREIiLCJwYWlkVXBUbyI6IjIwMTctMDItMjUifSx7ImNvZGUiOiJEQyIsInBhaWRVcFRvIjoiMjAxNy0wMi0yNSJ9XSwiaGFzaCI6IjMzOTgyOTkvMCIsImdyYWNlUGVyaW9kRGF5cyI6MCwiYXV0b1Byb2xvbmdhdGVkIjpmYWxzZSwiaXNBdXRvUHJvbG9uZ2F0ZWQiOmZhbHNlfQ==-keaxIkRgXPKE4BR/ZTs7s7UkP92LBxRe57HvWamu1EHVXTcV1B4f/KNQIrpOpN6dgpjig5eMVMPmo7yMPl+bmwQ8pTZaCGFuLqCHD1ngo6ywHKIQy0nR249sAUVaCl2wGJwaO4JeOh1opUx8chzSBVRZBMz0/MGyygi7duYAff9JQqfH3p/BhDTNM8eKl6z5tnneZ8ZG5bG1XvqFTqWk4FhGsEWdK7B+He44hPjBxKQl2gmZAodb6g9YxfTHhVRKQY5hQ7KPXNvh3ikerHkoaL5apgsVBZJOTDE2KdYTnGLmqxghFx6L0ofqKI6hMr48ergMyflDk6wLNGWJvYHLWw==-MIIEPjCCAiagAwIBAgIBBTANBgkqhkiG9w0BAQsFADAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBMB4XDTE1MTEwMjA4MjE0OFoXDTE4MTEwMTA4MjE0OFowETEPMA0GA1UEAwwGcHJvZDN5MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxcQkq+zdxlR2mmRYBPzGbUNdMN6OaXiXzxIWtMEkrJMO/5oUfQJbLLuMSMK0QHFmaI37WShyxZcfRCidwXjot4zmNBKnlyHodDij/78TmVqFl8nOeD5+07B8VEaIu7c3E1N+e1doC6wht4I4+IEmtsPAdoaj5WCQVQbrI8KeT8M9VcBIWX7fD0fhexfg3ZRt0xqwMcXGNp3DdJHiO0rCdU+Itv7EmtnSVq9jBG1usMSFvMowR25mju2JcPFp1+I4ZI+FqgR8gyG8oiNDyNEoAbsR3lOpI7grUYSvkB/xVy/VoklPCK2h0f0GJxFjnye8NT1PAywoyl7RmiAVRE/EKwIDAQABo4GZMIGWMAkGA1UdEwQCMAAwHQYDVR0OBBYEFGEpG9oZGcfLMGNBkY7SgHiMGgTcMEgGA1UdIwRBMD+AFKOetkhnQhI2Qb1t4Lm0oFKLl/GzoRykGjAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBggkA0myxg7KDeeEwEwYDVR0lBAwwCgYIKwYBBQUHAwEwCwYDVR0PBAQDAgWgMA0GCSqGSIb3DQEBCwUAA4ICAQC9WZuYgQedSuOc5TOUSrRigMw4/+wuC5EtZBfvdl4HT/8vzMW/oUlIP4YCvA0XKyBaCJ2iX+ZCDKoPfiYXiaSiH+HxAPV6J79vvouxKrWg2XV6ShFtPLP+0gPdGq3x9R3+kJbmAm8w+FOdlWqAfJrLvpzMGNeDU14YGXiZ9bVzmIQbwrBA+c/F4tlK/DV07dsNExihqFoibnqDiVNTGombaU2dDup2gwKdL81ua8EIcGNExHe82kjF4zwfadHk3bQVvbfdAwxcDy4xBjs3L4raPLU3yenSzr/OEur1+jfOxnQSmEcMXKXgrAQ9U55gwjcOFKrgOxEdek/Sk1VfOjvS+nuM4eyEruFMfaZHzoQiuw4IqgGc45ohFH0UUyjYcuFxxDSU9lMCv8qdHKm+wnPRb0l9l5vXsCBDuhAGYD6ss+Ga+aDY6f/qXZuUCEUOH3QUNbbCUlviSz6+GiRnt1kA9N2Qachl+2yBfaqUqr8h7Z2gsx5LcIf5kYNsqJ0GavXTVyWh7PYiKX4bs354ZQLUwwa/cG++2+wNWP+HtBhVxMRNTdVhSm38AknZlD+PTAsWGu9GyLmhti2EnVwGybSD2Dxmhxk3IPCkhKAK+pl0eWYGZWG3tJ9mZ7SowcXLWDFAk0lRJnKGFMTggrWjV8GYpw5bq23VmIqqDLgkNzuoog==</div></pre></td></tr></table></figure>]]></content>
+      
+        
+        <tags>
+            
+            <tag> 编辑器 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[postmassege]]></title>
+      <url>http://yoursite.com/2017/03/01/postmassege/</url>
+      <content type="html"><![CDATA[<h1 id="postmessage-兼容性"><a href="#postmessage-兼容性" class="headerlink" title="postmessage 兼容性"></a>postmessage 兼容性</h1><img src="/2017/03/01/postmassege/兼容.png" alt="兼容.png" title="">
+<h2 id="跨文档消息传输；"><a href="#跨文档消息传输；" class="headerlink" title="跨文档消息传输；"></a>跨文档消息传输；</h2><figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!--postMessage.ejs--&gt;</span></div><div class="line"><span class="meta">&lt;!DOCTYPE html&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="name">head</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;<span class="name">%=</span> <span class="attr">title</span> %&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">'stylesheet'</span> <span class="attr">href</span>=<span class="string">'/stylesheets/style.css'</span> /&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"></span></div><div class="line">      <span class="built_in">window</span>.addEventListener(<span class="string">'message'</span>,<span class="function"><span class="keyword">function</span>(<span class="params">e</span>)</span>&#123;</div><div class="line">        <span class="built_in">console</span>.log(e);</div><div class="line">        <span class="built_in">console</span>.log(e.data)</div><div class="line">      &#125;,<span class="literal">false</span>);</div><div class="line">      <span class="function"><span class="keyword">function</span> <span class="title">hello</span> (<span class="params"></span>)</span>&#123;</div><div class="line">        <span class="keyword">var</span> iframe = <span class="built_in">window</span>.frames[<span class="number">0</span>];</div><div class="line">        <span class="keyword">var</span> obj = &#123;<span class="attr">name</span>:<span class="string">"parent"</span>&#125;;</div><div class="line">        <span class="keyword">var</span> message = <span class="built_in">JSON</span>.stringify(obj);</div><div class="line">        iframe.postMessage(message,<span class="string">'http://127.0.0.1:3000/iframe'</span>);</div><div class="line">        <span class="built_in">console</span>.log(<span class="number">1</span>);</div><div class="line">      &#125;</div><div class="line">    <span class="tag">&lt;/<span class="name">script</span>&gt;</span></div><div class="line">  <span class="tag">&lt;/<span class="name">head</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">h1</span>&gt;</span>postmessage<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">iframe</span> <span class="attr">width</span>=<span class="string">"400"</span> <span class="attr">src</span>=<span class="string">"http://127.0.0.1:3000/iframe"</span> <span class="attr">onload</span>=<span class="string">"hello()"</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></div><div class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></div></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!--iframe.ejs--&gt;</span></div><div class="line"><span class="meta">&lt;!DOCTYPE html&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">"en"</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>Document<span class="tag">&lt;/<span class="name">title</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"></span></div><div class="line">        <span class="built_in">window</span>.addEventListener(<span class="string">'message'</span>,<span class="function"><span class="keyword">function</span>(<span class="params">e</span>)</span>&#123;</div><div class="line">            <span class="built_in">console</span>.log(e.origin);</div><div class="line">            <span class="comment">// 获得发送信息的源窗口 e.source;</span></div><div class="line">            <span class="built_in">console</span>.log(<span class="built_in">JSON</span>.parse(e.data))</div><div class="line">            <span class="built_in">console</span>.log(<span class="string">'这里是子窗口'</span>,<span class="keyword">this</span>.location,e.origin)</div><div class="line">            e.source.postMessage(<span class="string">'你好,父窗口，我是子窗口'</span>,e.origin);</div><div class="line">        &#125;)</div><div class="line">    <span class="tag">&lt;/<span class="name">script</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></div><div class="line">    hh</div><div class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></div></pre></td></tr></table></figure>]]></content>
+      
+        
+        <tags>
+            
+            <tag> html5 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[websocket]]></title>
+      <url>http://yoursite.com/2017/03/01/websocket/</url>
+      <content type="html"><![CDATA[<img src="/2017/03/01/websocket/websocket.jpg" alt="websocket.jpg" title="">
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> html5 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+  
+  
+</search>
